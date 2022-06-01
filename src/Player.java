@@ -1,21 +1,21 @@
-public class Player<i> {
+public class Player {
 
     private String name;
 
-    private int[][] fieldPlayer;
+    private int[][] field;
     public static final int FIELD_SIZE = 10;
 
     public Player(String name) {
         this.name = name;
-        this.fieldPlayer = new int[FIELD_SIZE][FIELD_SIZE];
+        this.field = new int[FIELD_SIZE][FIELD_SIZE];
     }
 
     public String getName() {
         return name;
     }
 
-    public int[][] getFieldPlayer() {
-        return fieldPlayer;
+    public int[][] getField() {
+        return field;
     }
 
 }
