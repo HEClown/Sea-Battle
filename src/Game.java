@@ -6,7 +6,7 @@
  */
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 public class Game {
@@ -15,7 +15,7 @@ public class Game {
 
     public static final int FIELD_SIZE = Player.FIELD_SIZE;
 
-    private static ArrayList<Player> players = new ArrayList<>(2);
+    private static LinkedList<Player> players = new LinkedList<>();
     private static boolean player_1_won = false;
     private static boolean player_2_won = false;
 
@@ -48,11 +48,11 @@ public class Game {
             for (int i = 0; i < ships.length; i++) {
                 System.out.printf("%s, расставьте ваш корабль (%s) на поле боя:\n", player.getName(), ships[i]);
 
-                drawField(player);
+                drawField(player.getMyField());
 
-                System.out.print("\nВыберите координату Х - ");
+                System.out.print("\nВведите координату Х - ");
                 x = scanner.nextInt();
-                System.out.print("Выберите координату Y - ");
+                System.out.print("Введите координату Y - ");
                 y = scanner.nextInt();
 
                 // Игрок вводит положене корабля, если длина расставляемого корабля > 1
@@ -65,19 +65,28 @@ public class Game {
                 dispositonShips(player, x, y, direction);
 
                 clearScreen();
+
+                if (i >= 3) {
+                    System.out.println("Ваши корабли на заданных позициях:");
+                    drawField(player.getMyField());
+                    stopThread(5000);
+                    clearScreen();
+                }
             }
         }
-        clearScreen();
     }
 
     // Отрисовка поля в консоли согласно расстановке кораблей игрока
-    public static void drawField(Player player) {
+    public static void drawField(int[][] field) {
         System.out.print("\n  0 1 2 3 4 5 6 7 8 9");
         for (int i = 0; i < FIELD_SIZE; i++) {
             System.out.printf("\n%d", i);
             for (int j = 0; j < FIELD_SIZE; j++) {
-                if (player.getField()[j][i] == 0) System.out.print("  ");
-                if (player.getField()[j][i] == 1) System.out.print(" #");
+                if (field[j][i] == 0) System.out.print("  "); // Пустая клетка
+                if (field[j][i] == 1) System.out.print(" #"); // Клетка с кораблём
+                if (field[j][i] == 2) System.out.print(" -"); // Клетка после промаха
+                if (field[j][i] == 3) System.out.print(" +"); // Клетка после попадания по вражескому кораблю
+                if (field[j][i] == 4) System.out.print(" X"); // Клетка после попадания врага по кораблю
             }
         }
         System.out.println();
@@ -86,8 +95,8 @@ public class Game {
     // Расстановка кораблей в поле (массиве) игрока согласно введённым данным
     public static void dispositonShips(Player player, int x, int y, int direction) {
         for (int k = 0; k < iters; k++) {
-            if (direction == 1) player.getField()[x][y + k] = 1;
-            if (direction == 2) player.getField()[x + k][y] = 1;
+            if (direction == 1) player.setMyField(x, y + k, 1);
+            if (direction == 2) player.setMyField(x + k, y, 1);
         }
         iters--;
     }
@@ -97,33 +106,54 @@ public class Game {
             for (Player player: players) {
                 System.out.printf("%s, введите координаты для атаки:\n", player.getName());
 
-                drawEmptyField();
+                drawField(player.getEnemyField());
 
                 System.out.print("\nx - ");
                 x = scanner.nextInt();
                 System.out.print("y - ");
                 y = scanner.nextInt();
 
+                checkAttack(player, x, y);
+
                 clearScreen();
             }
         } while (!player_1_won && !player_2_won);
     }
 
-    public static void drawEmptyField() {
-        System.out.print("\n  0 1 2 3 4 5 6 7 8 9");
-        for (int i = 0; i < FIELD_SIZE; i++) {
-            System.out.printf("\n%d", i);
-            for (int j = 0; j < FIELD_SIZE; j++) {
-               System.out.print("  ");
-            }
+    public static void checkAttack(Player player, int x, int y) {
+        Player enemyPlayer = players.getFirst();
+        if (player.getName().equals(enemyPlayer.getName())) {
+            enemyPlayer = players.getLast();
         }
-        System.out.println();
+
+        clearScreen();
+
+        if (enemyPlayer.getMyField()[x][y] == 1) {
+            System.out.printf("Попадание! По координатам (%d, %d) был корабль противника!\n", x, y);
+            player.setEnemyField(x, y, 3);
+            drawField(player.getEnemyField());
+            enemyPlayer.setMyField(x, y, 4);
+            stopThread(5000);
+        } else {
+            System.out.printf("Промах! По координатам (%d, %d) не было корабля противника!\n", x, y);
+            player.setEnemyField(x, y, 2);
+            drawField(player.getEnemyField());
+            stopThread(5000);
+        }
     }
 
     public static void clearScreen() {
         try {
             new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
         } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void stopThread(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
