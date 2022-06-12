@@ -86,7 +86,7 @@ public class Game {
                 if (field[j][i] == 1) System.out.print(" #"); // Клетка с кораблём
                 if (field[j][i] == 2) System.out.print(" -"); // Клетка после промаха
                 if (field[j][i] == 3) System.out.print(" +"); // Клетка после попадания по вражескому кораблю
-                if (field[j][i] == 4) System.out.print(" X"); // Клетка после попадания врага по кораблю
+                if (field[j][i] == 4) System.out.print(" X"); // Клетка после попадания врага по собственному кораблю
             }
         }
         System.out.println();
